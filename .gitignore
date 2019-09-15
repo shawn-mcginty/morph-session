@@ -10,6 +10,7 @@
 
 # ocamlbuild working directory
 _build/
+_esy
 
 # ocamlbuild targets
 *.byte
@@ -21,3 +22,5 @@ setup.log
 
 # Merlin configuring file for Vim and Emacs
 .merlin
+
+node_modules

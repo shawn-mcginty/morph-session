@@ -1,0 +1,8 @@
+(executable
+	(name test)
+	(libraries morph_session alcotest)
+)
+(alias
+	(name runtest)
+	(deps test.exe)
+	(action (run %{deps} --verbose --color=always)))

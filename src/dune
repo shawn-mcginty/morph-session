@@ -1,0 +1,5 @@
+(library
+	(name morph_session)
+  (public_name morph_session)
+	(libraries morph morph_core lwt lwt.unix nocrypto cstruct))
+(include_subdirs unqualified)

@@ -1,0 +1,25 @@
+lib: [
+  "/Users/shawn/dev/morph-session/_esy/default/store/b/morph_session-04cf4792/install/default/lib/morph_session/META"
+  "/Users/shawn/dev/morph-session/_esy/default/store/b/morph_session-04cf4792/install/default/lib/morph_session/Morph_session.cmi"
+  "/Users/shawn/dev/morph-session/_esy/default/store/b/morph_session-04cf4792/install/default/lib/morph_session/Morph_session.cmt"
+  "/Users/shawn/dev/morph-session/_esy/default/store/b/morph_session-04cf4792/install/default/lib/morph_session/Morph_session.cmx"
+  "/Users/shawn/dev/morph-session/_esy/default/store/b/morph_session-04cf4792/install/default/lib/morph_session/Morph_session.re"
+  "/Users/shawn/dev/morph-session/_esy/default/store/b/morph_session-04cf4792/install/default/lib/morph_session/SidCookie.re"
+  "/Users/shawn/dev/morph-session/_esy/default/store/b/morph_session-04cf4792/install/default/lib/morph_session/dune-package"
+  "/Users/shawn/dev/morph-session/_esy/default/store/b/morph_session-04cf4792/install/default/lib/morph_session/morph_session.a"
+  "/Users/shawn/dev/morph-session/_esy/default/store/b/morph_session-04cf4792/install/default/lib/morph_session/morph_session.cma"
+  "/Users/shawn/dev/morph-session/_esy/default/store/b/morph_session-04cf4792/install/default/lib/morph_session/morph_session.cmxa"
+  "/Users/shawn/dev/morph-session/_esy/default/store/b/morph_session-04cf4792/install/default/lib/morph_session/morph_session.cmxs"
+  "/Users/shawn/dev/morph-session/_esy/default/store/b/morph_session-04cf4792/install/default/lib/morph_session/morph_session__.cmi"
+  "/Users/shawn/dev/morph-session/_esy/default/store/b/morph_session-04cf4792/install/default/lib/morph_session/morph_session__.cmt"
+  "/Users/shawn/dev/morph-session/_esy/default/store/b/morph_session-04cf4792/install/default/lib/morph_session/morph_session__.cmx"
+  "/Users/shawn/dev/morph-session/_esy/default/store/b/morph_session-04cf4792/install/default/lib/morph_session/morph_session__.ml"
+  "/Users/shawn/dev/morph-session/_esy/default/store/b/morph_session-04cf4792/install/default/lib/morph_session/morph_session__SidCookie.cmi"
+  "/Users/shawn/dev/morph-session/_esy/default/store/b/morph_session-04cf4792/install/default/lib/morph_session/morph_session__SidCookie.cmt"
+  "/Users/shawn/dev/morph-session/_esy/default/store/b/morph_session-04cf4792/install/default/lib/morph_session/morph_session__SidCookie.cmx"
+  "/Users/shawn/dev/morph-session/_esy/default/store/b/morph_session-04cf4792/install/default/lib/morph_session/opam"
+]
+doc: [
+  "/Users/shawn/dev/morph-session/_esy/default/store/b/morph_session-04cf4792/install/default/doc/morph_session/LICENSE"
+  "/Users/shawn/dev/morph-session/_esy/default/store/b/morph_session-04cf4792/install/default/doc/morph_session/README.md"
+]
