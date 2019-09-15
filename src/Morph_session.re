@@ -20,7 +20,7 @@ type store = {
   create: (string, t) => Lwt.t(unit),
   update: (string, t) => Lwt.t(unit),
   get: string => Lwt.t(option(t)),
-  delete: string => Lwt.t(unit),
+  destroy: string => Lwt.t(unit),
   clear_expired: unit => Lwt.t(unit),
 };
 
@@ -39,7 +39,7 @@ module MemorySessionStore = {
       Lwt.return(session_data);
     };
 
-    let delete = (sid: string) => {
+    let destroy = (sid: string) => {
       Hashtbl.remove(table, sid);
       Lwt.return_unit;
     };
@@ -63,14 +63,14 @@ module MemorySessionStore = {
       Lwt.return_unit;
     };
 
-    {clear_expired, create, update, delete, get};
+    {clear_expired, create, update, destroy, get};
   };
 };
 
 module Make = (Session_data: SessionData) => {
   let session_data_key: Hmap.key((string, Session_data.t)) =
     Hmap.Key.create();
-  let session_config_key: Hmap.key((string, string, store)) =
+  let session_config_key: Hmap.key((string, string, float, store)) =
     Hmap.Key.create();
 
   let default_sid = "morph.sid";
@@ -79,6 +79,10 @@ module Make = (Session_data: SessionData) => {
   let rng_seed = Unix.time() |> string_of_float |> Cstruct.of_string;
   let rng_gen =
     Nocrypto.Rng.(create(~seed=rng_seed, (module Generators.Fortuna)));
+
+  let get_expiry = max_age => {
+    Unix.time() +. max_age;
+  };
 
   let get_session_data = (req: Morph_core.Request.t): option(Session_data.t) => {
     switch (Hmap.find(session_data_key, req.context)) {
@@ -147,6 +151,14 @@ module Make = (Session_data: SessionData) => {
     sign(sid, secret);
   };
 
+  let session_needs_touched = (name, max_age, update_interval, expiry, res) =>
+    if (SidCookie.has_set_cookie(name, res)) {
+      false;
+    } else {
+      let time_since_session_created = expiry -. max_age;
+      time_since_session_created >= update_interval;
+    };
+
   let start_session =
       (
         session_data: Session_data.t,
@@ -154,17 +166,17 @@ module Make = (Session_data: SessionData) => {
         res: Morph_core.Response.t,
       ) =>
     switch (Hmap.find(session_config_key, req.context)) {
-    | Some((name, secret, store)) =>
+    | Some((name, secret, max_age, store)) =>
       let sid = gen_sid(secret);
       let unsigned_sid = unsign(sid, secret);
-      let expiry = 0.0;
+      let expiry = get_expiry(max_age);
       let _async =
         Session_data.serialize(session_data)
         >>= (
           payload =>
             store.create(unsigned_sid, {sid: unsigned_sid, expiry, payload})
         );
-      SidCookie.set(name, sid, res);
+      SidCookie.set(name, sid, max_age, res);
     | None =>
       raise(
         MiddleWareRequired(
@@ -175,10 +187,10 @@ module Make = (Session_data: SessionData) => {
 
   let end_session = (req: Morph_core.Request.t, res: Morph_core.Response.t) =>
     switch (Hmap.find(session_config_key, req.context)) {
-    | Some((name, _secret, store)) =>
+    | Some((name, _secret, _max_age, store)) =>
       switch (Hmap.find(session_data_key, req.context)) {
       | Some((sid, _data)) =>
-        let _async = store.delete(sid);
+        let _async = store.destroy(sid);
         SidCookie.unset(name, res);
       | None => res
       }
@@ -191,7 +203,13 @@ module Make = (Session_data: SessionData) => {
     };
 
   let get_middleware =
-      (~name=default_sid, ~store=default_store, ~secret)
+      (
+        ~name=default_sid,
+        ~store=default_store,
+        ~max_age=2592000.,
+        ~update_interval=300.,
+        ~secret,
+      )
       : Opium_core.Filter.simple(Morph_core.Request.t, Morph_core.Response.t) =>
     (service, raw_req: Morph_core.Request.t) => {
       let req = {
@@ -199,7 +217,7 @@ module Make = (Session_data: SessionData) => {
         context:
           Hmap.add(
             session_config_key,
-            (name, secret, store),
+            (name, secret, max_age, store),
             raw_req.context,
           ),
       };
@@ -211,8 +229,8 @@ module Make = (Session_data: SessionData) => {
         >>= (
           maybe_session =>
             switch (maybe_session) {
-            | Some({payload, _}) =>
-              Session_data.deserialize(payload)
+            | Some(stored_session) =>
+              Session_data.deserialize(stored_session.payload)
               >>= (
                 session_data => {
                   service({
@@ -220,6 +238,28 @@ module Make = (Session_data: SessionData) => {
                     context: set_session_data(req, sid, session_data),
                   });
                 }
+              )
+              >>= (
+                (res2: Morph_core.Response.t) =>
+                  if (session_needs_touched(
+                        name,
+                        max_age,
+                        update_interval,
+                        stored_session.expiry,
+                        res2,
+                      )) {
+                    store.update(
+                      sid,
+                      {...stored_session, expiry: get_expiry(max_age)},
+                    )
+                    >>= (
+                      () =>
+                        SidCookie.set(name, signed_sid, max_age, res2)
+                        |> Lwt.return
+                    );
+                  } else {
+                    Lwt.return(res2);
+                  }
               )
             | None => service(req)
             }

@@ -39,15 +39,14 @@ let of_req = (session_key, req: Morph_core.Request.t) => {
   };
 };
 
-let set = (name, sid, res: Morph_core.Response.t) => {
+let set = (name, sid, max_age, res: Morph_core.Response.t) => {
   let set_cookie_key = "Set-Cookie";
-  let thirty_days = string_of_int(30 * 24 * 60 * 60);
+  let max_age_str = string_of_float(max_age);
+  // remove the . at the end of the float
+  let expiry = String.sub(max_age_str, 0, String.length(max_age_str) - 2);
 
   Morph_core.Response.add_header(
-    (
-      set_cookie_key,
-      name ++ "=" ++ sid ++ "; Max-Age=" ++ thirty_days ++ ";",
-    ),
+    (set_cookie_key, name ++ "=" ++ sid ++ "; Max-Age=" ++ expiry ++ ";"),
     res,
   );
 };
@@ -62,4 +61,27 @@ let unset = (name, res: Morph_core.Response.t) => {
     ),
     res,
   );
+};
+
+let has_set_cookie = (name, res: Morph_core.Response.t) => {
+  let set_cookie_key = "Set-Cookie";
+  let name_len = String.length(name);
+  let existing_header =
+    List.find_opt(
+      ((h_key, h_val)) =>
+        if (h_key == set_cookie_key) {
+          if (String.sub(h_val, 0, name_len) == name) {
+            true;
+          } else {
+            false;
+          };
+        } else {
+          false;
+        },
+      res.headers,
+    );
+  switch (existing_header) {
+  | Some(_) => true
+  | None => false
+  };
 };
